@@ -19,10 +19,10 @@ favicon.href = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY
 
 document.getElementsByTagName("head")[0].appendChild(favicon);
 
-window.addEventListener("load", function()
+window.addEventListener("load", function ()
 {
     const request = new XMLHttpRequest();
-    request.onload = function(ev)
+    request.onload = function (ev)
     {
         if (ev.target === null)
             return;
@@ -41,7 +41,7 @@ window.addEventListener("load", function()
             const currentButton = document.createElement("button");
             currentButton.className = "trackers-list-element";
             currentButton.textContent = currentTracker;
-            currentButton.onclick = function()
+            currentButton.onclick = function ()
             {
                 currentButton.classList.add("tracker-list-element-hidden");
                 trackersTextarea.value += currentTracker + "\n";
@@ -67,7 +67,11 @@ function ResizeTextarea(element: HTMLElement)
 
 function FormatTextareLines(element: HTMLTextAreaElement, resizeTextArea: boolean = true)
 {
-    element.value = element.value.split(/\s+/g).filter(str => str.length !== 0).join("\n");
+    element.value = element.value.split(/\s+/g)
+        .map(str => str.trim())
+        .filter(str => str.length !== 0)
+        .join("\n")
+        + "\n";
 
     if (resizeTextArea)
         ResizeTextarea(element);
@@ -163,7 +167,7 @@ function ShowTrackers(show: boolean)
     overlay.style.opacity = show ? "1" : "0";
 }
 
-window.addEventListener("keydown", function(e)
+window.addEventListener("keydown", function (e)
 {
     if (e.code === "Escape")
         ShowTrackers(false);
@@ -234,7 +238,18 @@ function SetTorrentData()
         if (current === "")
             continue;
 
-        if (current.match(/.+:\/\/((\[[a-fA-F0-9:]+\])|([a-z0-9-]+\.)*([a-z0-9-]+)):\d+((\/.*)\/announce)?/))
+        let validTracker = true;
+        try
+        {
+            const url = new URL(current);
+            validTracker = /\/announce\/?$/.test(url.pathname); // must end with "announce" or "announce/"
+        }
+        catch
+        {
+            validTracker = false;
+        }
+
+        if (validTracker)
             okTrackers[current] = true;
         else
         {
@@ -371,7 +386,7 @@ function Finished()
     const msSaveOrOpenBlob: ((blob: any, defaultName?: string, retVal?: boolean) => boolean) | undefined = (window.navigator as any).msSaveOrOpenBlob;
     if (msSaveOrOpenBlob)
     {
-        button.onclick = function()
+        button.onclick = function ()
         {
             if (torrentChanged)
             {
@@ -392,7 +407,7 @@ function Finished()
         window.URL.revokeObjectURL(blobUrl);
         blobUrl = window.URL.createObjectURL(blob);
         a.href = blobUrl;
-        button.onclick = function()
+        button.onclick = function ()
         {
             if (torrentChanged)
             {
@@ -523,7 +538,7 @@ function CreateFromFile(obj: TorrentObject)
 
     let chunkIndex = 0;
     let waitingForWorkers = false;
-    fr.onloadend = async function(ev)
+    fr.onloadend = async function (ev)
     {
         if (!ev.target || !(ev.target.result instanceof ArrayBuffer))
             return;
@@ -568,7 +583,7 @@ function CreateFromFile(obj: TorrentObject)
         }
     };
 
-    fr.onerror = function()
+    fr.onerror = function ()
     {
         Failed(singleFile && singleFile.name, fr.error);
     };
@@ -602,9 +617,8 @@ function CreateFromFolder(obj: TorrentObject)
         const currentFileInfo = allFiles[i];
         const currentFileSize = currentFileInfo.size;
         totalSize += currentFileSize;
-        fileInfos.push(
-        {
-            "length" : currentFileSize,
+        fileInfos.push({
+            "length": currentFileSize,
             "path": (<string>(<any>currentFileInfo).webkitRelativePath).split("/").slice(1)
         });
     }
@@ -653,7 +667,7 @@ function CreateFromFolder(obj: TorrentObject)
     }
 
     let waitingForWorkers = false;
-    fr.onloadend = async function(ev)
+    fr.onloadend = async function (ev)
     {
         if (!ev.target || !(ev.target.result instanceof ArrayBuffer))
             return;
@@ -747,7 +761,7 @@ function CreateFromFolder(obj: TorrentObject)
         }
     };
 
-    fr.onerror = function()
+    fr.onerror = function ()
     {
         Failed(currentFile.name, fr.error);
     };
@@ -815,7 +829,7 @@ function toByteArray(str: string)
 
 class BencodeObject
 {
-    encode(_array: number[]) {}
+    encode(_array: number[]) { }
 
     getBencodeObject(obj: any)
     {
@@ -828,8 +842,7 @@ class BencodeObject
                 return new BencodeInt(obj);
             case "string":
                 return new BencodeString(obj);
-            case "object":
-            {
+            case "object": {
                 if (Array.isArray(obj))
                     return new BencodeList(obj);
                 else
@@ -965,7 +978,7 @@ class BencodeInt extends BencodeObject
 
 const Bencode =
 {
-    EncodeToBytes: function(obj: TorrentObject)
+    EncodeToBytes: function (obj: TorrentObject)
     {
         const result: number[] = [];
         new BencodeDict(obj).encode(result);
@@ -998,7 +1011,7 @@ function SetupSha1WithoutWorkers()
     const script = document.createElement("script");
     script.src = "dist/sha1.js";
 
-    script.onload = function()
+    script.onload = function ()
     {
         sha1ScriptLoaded = true;
         waitingResolvers.forEach(resolve => resolve());
@@ -1007,7 +1020,7 @@ function SetupSha1WithoutWorkers()
 
     document.body.appendChild(script);
 
-    sha1 = async function(data: Sha1Data)
+    sha1 = async function (data: Sha1Data)
     {
         await EnsureSha1ScriptLoaded();
         return ProcessSha1Data(data);
@@ -1019,7 +1032,7 @@ function SetupSha1WithoutWorkers()
     const workers: Worker[] = [];
 
     let workersAvailable = true;
-    if (location.protocol === "https:" ||  location.protocol === "http:")
+    if (location.protocol === "https:" || location.protocol === "http:")
     {
         try
         {
@@ -1085,7 +1098,7 @@ function SetupSha1WithoutWorkers()
         };
     }
 
-    sha1 = function(data: Sha1Data)
+    sha1 = function (data: Sha1Data)
     {
         return new Promise(resolve => EnqueueWorkerTask(data, resolve));
     };
@@ -1094,7 +1107,7 @@ function SetupSha1WithoutWorkers()
 // Array.from polyfill
 if (typeof Array.from === "undefined")
 {
-    Array.from = function<T>(arrayLike: ArrayLike<T>)
+    Array.from = function <T>(arrayLike: ArrayLike<T>)
     {
         const len = arrayLike.length;
         const ret = new Array<T>(len);

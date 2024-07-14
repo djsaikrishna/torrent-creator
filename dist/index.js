@@ -101,7 +101,11 @@ function ResizeTextarea(element) {
 }
 function FormatTextareLines(element, resizeTextArea) {
     if (resizeTextArea === void 0) { resizeTextArea = true; }
-    element.value = element.value.split(/\s+/g).filter(function (str) { return str.length !== 0; }).join("\n");
+    element.value = element.value.split(/\s+/g)
+        .map(function (str) { return str.trim(); })
+        .filter(function (str) { return str.length !== 0; })
+        .join("\n")
+        + "\n";
     if (resizeTextArea)
         ResizeTextarea(element);
 }
@@ -201,7 +205,15 @@ function SetTorrentData() {
         var current = trackers[i].trim();
         if (current === "")
             continue;
-        if (current.match(/.+:\/\/((\[[a-fA-F0-9:]+\])|([a-z0-9-]+\.)*([a-z0-9-]+)):\d+((\/.*)\/announce)?/))
+        var validTracker = true;
+        try {
+            var url = new URL(current);
+            validTracker = /\/announce\/?$/.test(url.pathname); // must end with "announce" or "announce/"
+        }
+        catch (_a) {
+            validTracker = false;
+        }
+        if (validTracker)
             okTrackers[current] = true;
         else {
             errorTextDiv.innerHTML = "Invalid tracker: " + current;
@@ -651,13 +663,12 @@ var BencodeObject = /** @class */ (function () {
                 return new BencodeInt(obj);
             case "string":
                 return new BencodeString(obj);
-            case "object":
-                {
-                    if (Array.isArray(obj))
-                        return new BencodeList(obj);
-                    else
-                        return new BencodeDict(obj);
-                }
+            case "object": {
+                if (Array.isArray(obj))
+                    return new BencodeList(obj);
+                else
+                    return new BencodeDict(obj);
+            }
         }
         return null;
     };
